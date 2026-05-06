@@ -63,3 +63,21 @@ def format_diff(diff: dict) -> str:
         lines.append("No differences found.")
 
     return "\n".join(lines)
+
+
+def summary(diff: dict) -> dict:
+    """Return a summary of the diff with counts for each category.
+
+    Args:
+        diff: A diff dict as returned by :func:`diff_snapshots`.
+
+    Returns:
+        A dict with integer counts for 'added', 'removed', 'changed',
+        and 'unchanged' keys.
+    """
+    return {
+        "added": len(diff.get("added", {})),
+        "removed": len(diff.get("removed", {})),
+        "changed": len(diff.get("changed", {})),
+        "unchanged": len(diff.get("unchanged", {})),
+    }
