@@ -53,6 +53,9 @@ def cmd_tag(args: argparse.Namespace) -> int:
     except TagError as exc:
         print(f"Tag error: {exc}", file=sys.stderr)
         return 1
+    except KeyboardInterrupt:
+        print("Interrupted.", file=sys.stderr)
+        return 130
 
     return 0
 
