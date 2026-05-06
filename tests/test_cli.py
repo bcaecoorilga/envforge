@@ -12,6 +12,20 @@ def parser():
     return build_parser()
 
 
+@pytest.fixture()
+def sample_snapshot(tmp_path):
+    """Return a path to a minimal valid snapshot file for reuse across tests."""
+    snap = {
+        "label": "test",
+        "timestamp": "2024-01-01T00:00:00",
+        "checksum": "abc123",
+        "variables": {"A": "1", "B": "2"},
+    }
+    snap_file = tmp_path / "snapshot.json"
+    snap_file.write_text(json.dumps(snap))
+    return snap_file
+
+
 def test_parser_capture_subcommand(parser):
     args = parser.parse_args(["capture", "--label", "dev", "--output", "out.json"])
     assert args.command == "capture"
@@ -62,13 +76,27 @@ def test_cmd_capture_creates_file(tmp_path, monkeypatch, capsys):
     assert "ENVFORGE_SAMPLE" in data["variables"]
 
 
-def test_cmd_diff_no_differences(tmp_path, capsys):
-    snap = {"label": "x", "timestamp": "t", "checksum": "c",
-            "variables": {"A": "1"}}
+def test_cmd_diff_no_differences(tmp_path, capsys, sample_snapshot):
+    """Diffing a snapshot against itself should report no differences."""
+    class FakeArgs:
+        snapshot_a = str(sample_snapshot)
+        snapshot_b = str(sample_snapshot)
+
+    cmd_diff(FakeArgs())
+    captured = capsys.readouterr()
+    assert "No differences" in captured.out
+
+
+def test_cmd_diff_with_differences(tmp_path, capsys):
+    """Diffing two snapshots with different variables should report differences."""
+    snap_a = {"label": "a", "timestamp": "t", "checksum": "c",
+              "variables": {"X": "1"}}
+    snap_b = {"label": "b", "timestamp": "t", "checksum": "c",
+              "variables": {"X": "2"}}
     a = tmp_path / "a.json"
     b = tmp_path / "b.json"
-    a.write_text(json.dumps(snap))
-    b.write_text(json.dumps(snap))
+    a.write_text(json.dumps(snap_a))
+    b.write_text(json.dumps(snap_b))
 
     class FakeArgs:
         snapshot_a = str(a)
@@ -76,7 +104,7 @@ def test_cmd_diff_no_differences(tmp_path, capsys):
 
     cmd_diff(FakeArgs())
     captured = capsys.readouterr()
-    assert "No differences" in captured.out
+    assert "No differences" not in captured.out
 
 
 def test_cmd_restore_applies_variables(tmp_path, monkeypatch, capsys):
