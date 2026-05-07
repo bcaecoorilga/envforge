@@ -70,6 +70,11 @@ def test_validate_snapshot_raises_on_non_string_timestamp():
         validate_snapshot(make_snapshot(timestamp=99))
 
 
+def test_validate_snapshot_passes_with_empty_variables():
+    """A snapshot with no environment variables should still be valid."""
+    validate_snapshot(make_snapshot(variables={}))
+
+
 def test_validate_variables_passes_valid():
     validate_variables({"APP_ENV": "prod", "PORT": "8080"})
 
@@ -82,6 +87,11 @@ def test_validate_variables_raises_on_non_dict():
 def test_validate_variables_raises_on_bad_key():
     with pytest.raises(ValidationError, match="Invalid variable key name"):
         validate_variables({"bad-key": "value"})
+
+
+def test_validate_variables_passes_empty_dict():
+    """An empty variables dict should be considered valid."""
+    validate_variables({})
 
 
 def test_is_valid_snapshot_returns_true_for_valid():
