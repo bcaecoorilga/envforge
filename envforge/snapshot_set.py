@@ -82,3 +82,32 @@ def delete_set(path: str, name: str) -> None:
         raise SnapshotSetError(f"Snapshot set '{name}' does not exist.")
     del data["sets"][name]
     _save_set(path, data)
+
+
+def rename_set(path: str, old_name: str, new_name: str) -> Dict:
+    """Rename an existing snapshot set.
+
+    Args:
+        path: Path to the snapshot set storage file.
+        old_name: The current name of the snapshot set.
+        new_name: The desired new name for the snapshot set.
+
+    Returns:
+        The updated snapshot set entry.
+
+    Raises:
+        SnapshotSetError: If old_name does not exist, new_name is empty,
+            or new_name is already taken by another set.
+    """
+    if not new_name or not new_name.strip():
+        raise SnapshotSetError("New snapshot set name must not be empty.")
+    data = _load_set(path)
+    if old_name not in data["sets"]:
+        raise SnapshotSetError(f"Snapshot set '{old_name}' does not exist.")
+    if new_name in data["sets"]:
+        raise SnapshotSetError(f"Snapshot set '{new_name}' already exists.")
+    entry = data["sets"].pop(old_name)
+    entry["name"] = new_name
+    data["sets"][new_name] = entry
+    _save_set(path, data)
+    return entry
