@@ -102,6 +102,14 @@ def test_cmd_lint_json_output_is_valid_json(parser, dirty_snapshot_file, capsys)
 
 
 def test_cmd_lint_missing_file_returns_one(parser, capsys):
-    args = parser.parse_args(["lint", "/nonexistent/path.json"])
+    args = parser.parse_args(["lint", "nonexistent_file.json"])
     result = cmd_lint(args)
     assert result == 1
+
+
+def test_cmd_lint_missing_file_error_message(parser, capsys):
+    """Ensure a helpful error message is printed when a file does not exist."""
+    args = parser.parse_args(["lint", "nonexistent_file.json"])
+    cmd_lint(args)
+    out = capsys.readouterr().out
+    assert "nonexistent_file.json" in out
