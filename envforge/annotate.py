@@ -18,7 +18,12 @@ def _load_annotations(path: str) -> Dict[str, List[dict]]:
     if not os.path.exists(path):
         return {}
     with open(path, "r", encoding="utf-8") as fh:
-        return json.load(fh)
+        try:
+            return json.load(fh)
+        except json.JSONDecodeError as exc:
+            raise AnnotateError(
+                f"Annotation file '{path}' contains invalid JSON: {exc}"
+            ) from exc
 
 
 def _save_annotations(path: str, data: Dict[str, List[dict]]) -> None:
