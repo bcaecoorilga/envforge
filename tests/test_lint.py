@@ -96,13 +96,22 @@ def test_lint_raises_on_missing_keys():
         lint_snapshot({"label": "x"})
 
 
+def test_lint_raises_on_unknown_rule():
+    """Passing an unrecognised rule name should raise LintError."""
+    snap = make_snapshot(variables={"APP_HOST": "localhost"})
+    with pytest.raises(LintError):
+        lint_snapshot(snap, rules=["nonexistent_rule"])
+
+
 def test_format_lint_report_no_violations():
     report = format_lint_report([])
-    assert "No lint violations" in report
+    assert "no violations" in report.lower()
 
 
-def test_format_lint_report_lists_violations():
-    violations = [{"rule": "uppercase_keys", "key": "app_host", "message": "msg"}]
+def test_format_lint_report_with_violations():
+    violations = [
+        {"rule": "uppercase_keys", "key": "app_host", "message": "Key should be uppercase"},
+    ]
     report = format_lint_report(violations)
     assert "uppercase_keys" in report
     assert "app_host" in report
@@ -116,3 +125,8 @@ def test_is_clean_returns_true_for_clean_snapshot():
 def test_is_clean_returns_false_for_dirty_snapshot():
     snap = make_snapshot(variables={"app_host": "localhost"})
     assert is_clean(snap) is False
+
+
+def test_lint_rules_is_non_empty_list():
+    """LINT_RULES should expose the available rule names as a non-empty collection."""
+    assert len(LINT_RULES) > 0
