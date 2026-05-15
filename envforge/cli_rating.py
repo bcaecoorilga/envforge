@@ -12,7 +12,14 @@ from envforge.snapshot_rating import (
 )
 
 
+def _format_entry(label: str, rating: int, comment: str) -> str:
+    """Format a rating entry for display."""
+    suffix = f" ({comment})" if comment else ""
+    return f"{label}: {rating}/5{suffix}"
+
+
 def cmd_rating(args: argparse.Namespace) -> None:
+    """Dispatch rating subcommands based on parsed arguments."""
     try:
         if args.rating_action == "set":
             entry = rate_snapshot(
@@ -21,16 +28,15 @@ def cmd_rating(args: argparse.Namespace) -> None:
                 comment=args.comment or "",
                 rating_file=args.rating_file,
             )
-            print(f"Rated '{args.label}': {entry['rating']}/5"
-                  + (f" — {entry['comment']}" if entry["comment"] else ""))
+            print(f"Rated '{args.label}': "
+                  + _format_entry(args.label, entry['rating'], entry['comment']).split(": ", 1)[1])
 
         elif args.rating_action == "get":
             entry = get_rating(args.label, rating_file=args.rating_file)
             if entry is None:
                 print(f"No rating found for '{args.label}'.")
             else:
-                print(f"{args.label}: {entry['rating']}/5"
-                      + (f" ({entry['comment']})" if entry["comment"] else ""))
+                print(_format_entry(args.label, entry['rating'], entry.get('comment', '')))
 
         elif args.rating_action == "remove":
             removed = remove_rating(args.label, rating_file=args.rating_file)
@@ -45,13 +51,12 @@ def cmd_rating(args: argparse.Namespace) -> None:
                 print("No ratings recorded.")
             else:
                 for e in entries:
-                    comment = f" ({e['comment']})" if e.get("comment") else ""
-                    print(f"{e['label']}: {e['rating']}/5{comment}")
+                    print(_format_entry(e['label'], e['rating'], e.get('comment', '')))
 
         elif args.rating_action == "top":
             entries = top_rated(n=args.n, rating_file=args.rating_file)
             for e in entries:
-                print(f"{e['label']}: {e['rating']}/5")
+                print(_format_entry(e['label'], e['rating'], e.get('comment', '')))
 
     except RatingError as exc:
         print(f"Error: {exc}", file=sys.stderr)
@@ -59,6 +64,7 @@ def cmd_rating(args: argparse.Namespace) -> None:
 
 
 def add_rating_subcommand(subparsers) -> None:
+    """Register the 'rating' subcommand and its sub-actions with the given subparsers."""
     parser = subparsers.add_parser("rating", help="Rate snapshots")
     parser.add_argument("--rating-file", default="ratings.json")
     sub = parser.add_subparsers(dest="rating_action", required=True)
