@@ -33,7 +33,7 @@ def cmd_dependency(args: argparse.Namespace) -> int:
                 print(f"No dependencies for '{args.label}'")
             else:
                 for entry in deps:
-                    reason = f" ({entry['reason']}" + ")" if entry["reason"] else ""
+                    reason = f" ({entry['reason']})" if entry["reason"] else ""
                     print(f"  {args.label} -> {entry['depends_on']}{reason}")
 
         elif args.dep_action == "dependents":
